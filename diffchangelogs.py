@@ -132,11 +132,7 @@ def gen_deb(deblist):
             # if the source changelogpath is not set and this deb has a
             # changelog, try to set it
             if sourcelist[checkdeb.source].changelogpath == '':
-                changelogpath = get_changelog_file(checkdeb.path)
-                if changelogpath != '':
-                    # this deb has a changelog
-                    sourcelist[checkdeb.source]._set_details(
-                        checkdeb.path, checkdeb.installsize, changelogpath)
+                sourcelist[checkdeb.source]._update_details(checkdeb)
 
             if checkdeb.name in sourcelist[checkdeb.source].debs.keys():
                 # this is an update version of source
@@ -164,18 +160,13 @@ def gen_deb(deblist):
                 # try to extract the smallest deb of every source
                 # package.installsize and source.size are string, not number
                 if (int(checkdeb.installsize) < int(sourcelist[checkdeb.source].size)):
-                    sourcelist[checkdeb.source].size = checkdeb.installsize
-                    sourcelist[checkdeb.source].debpath = checkdeb.path
+                    sourcelist[checkdeb.source]._update_details(checkdeb)
 
         else:
             # add a new source
             newsource = Source(
                 checkdeb.source, checkdeb.name, checkdeb.arch, checkdeb.version, )
-            changelogpath = get_changelog_file(checkdeb.path)
-            if changelogpath != '':
-                # this deb has a changelog
-                newsource._set_details(
-                    checkdeb.path, checkdeb.installsize, changelogpath)
+            newsource._update_details(checkdeb)
 
             sourcelist[newsource.name] = newsource
 
@@ -242,6 +233,13 @@ class Source(object):
 
         else:
             self.changelogdiff = ''
+
+    def _update_details(self, checkdeb):
+        changelogpath = get_changelog_file(checkdeb.path)
+        if changelogpath != '':
+            # this deb has a changelog, use it in source
+            self._set_details(checkdeb.path, checkdeb.installsize, changelogpath)
+
 
 
 if __name__ == '__main__':
