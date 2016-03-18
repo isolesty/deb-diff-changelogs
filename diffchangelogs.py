@@ -107,6 +107,11 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
             "/p' | grep -v " + baseversion
 
     logdiff = os.popen(diffcmd).read()
+
+    # clean TMPDIR
+    cleancmd = "rm -rf " + TMPDIR
+    os.system(cleancmd)
+
     if logdiff:
         return logdiff
     else:
@@ -245,11 +250,7 @@ if __name__ == '__main__':
 
     sp = gen_deb(deblist)
 
-    # for x in sp.keys():
-    #     sp[x]._get_diff_changelog()
-    #     log_print( sp[x].name  + ": " + sp[x].changelogpath + sp[x].changelogdiff)
-
-    sp['make-doc-non-dfsg']._get_diff_changelog()
-    log_print(sp['make-doc-non-dfsg'].name + ": " +
-              sp['make-doc-non-dfsg'].changelogpath)
-    log_print(sp['make-doc-non-dfsg'].changelogdiff)
+    for x in sp.keys():
+        sp[x]._get_diff_changelog()
+        log_print( sp[x].name  + ": " + sp[x].changelogpath)
+        log_print( sp[x].changelogdiff)
