@@ -145,7 +145,8 @@ def gen_deb(deblist):
                 else:
                     # the same deb name of different arch(such as amd64 and
                     # i386)
-                    if (checkdeb.version == sourcelist[checkdeb.source].version) and (checkdeb.arch != sourcelist[checkdeb.source].debs[checkdeb.name]):
+                    if (checkdeb.version == sourcelist[checkdeb.source].version) and (sourcelist[checkdeb.source].debs[checkdeb.name].find(checkdeb.arch) == -1):
+                        log_print(sourcelist[checkdeb.source].debs[checkdeb.name])
                         sourcelist[checkdeb.source].debs[
                             checkdeb.name] += " " + checkdeb.arch
                     # this is an old version of this source
