@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-#-*- encoding:utf-8 -*-
+# -*- encoding:utf-8 -*-
 
 # TODO: import python-apt
 
 import os
 import re
 
-import glob
+import sys
+
+# xml parser
+import json
+from pprint import pprint
+
+# list all debs
 from fnmatch import fnmatch
 
 # random tmp dir
@@ -19,7 +25,22 @@ DEBUG = 1
 
 def log_print(output):
     if DEBUG:
-        print(output)
+        pprint(output)
+
+
+def find_file(start, name):
+    """find all file in start
+    start: a location, str
+    name: str
+    """
+    deblist = []
+    for relpath, dirs, files in os.walk(start):
+        for file in files:
+            if file.endswith(name):
+                filepath = os.path.join(start, relpath, file)
+                deblist.append(os.path.normpath(os.path.abspath(filepath)))
+
+    return deblist
 
 
 def gen_string(length):
@@ -29,6 +50,19 @@ def gen_string(length):
     """
     randomstring = string.ascii_letters + string.digits
     return ''.join([random.choice(randomstring) for i in range(length)])
+
+
+def search_deb(searchbase, searchkey):
+    """Search a dict
+    searchbase: dict
+    searchkey: str
+    return a source class, or 0 if not found.
+    """
+    for i in searchbase.keys():
+        if searchkey in searchbase[i].debs.keys():
+            return searchbase[i]
+
+    return 0
 
 
 def get_deb_details(debpath):
@@ -146,7 +180,6 @@ def gen_deb(deblist):
                     # the same deb name of different arch(such as amd64 and
                     # i386)
                     if (checkdeb.version == sourcelist[checkdeb.source].version) and (sourcelist[checkdeb.source].debs[checkdeb.name].find(checkdeb.arch) == -1):
-                        log_print(sourcelist[checkdeb.source].debs[checkdeb.name])
                         sourcelist[checkdeb.source].debs[
                             checkdeb.name] += " " + checkdeb.arch
                     # this is an old version of this source
@@ -239,17 +272,37 @@ class Source(object):
         changelogpath = get_changelog_file(checkdeb.path)
         if changelogpath != '':
             # this deb has a changelog, use it in source
-            self._set_details(checkdeb.path, checkdeb.installsize, changelogpath)
-
+            self._set_details(
+                checkdeb.path, checkdeb.installsize, changelogpath)
 
 
 if __name__ == '__main__':
-
-    deblist = [name for name in os.listdir('./') if fnmatch(name, '*.deb')]
+    deblist = find_file('./', '.deb')
 
     sp = gen_deb(deblist)
 
+    if len(sys.argv) > 1:
+        resultjson = sys.argv[1]
+
+        with open(resultjson, 'r') as f:
+            data = json.load(f)
+
+        modifytime = data['time']
+        jsondetails = data['details']
+
+        for debfile in jsondetails:
+            if debfile['oldversion'] != '0':
+                oldsp = search_deb(sp, debfile['name'])
+                oldsp.oldversion = debfile['oldversion']
+
+    rrjson = []
     for x in sp.keys():
         sp[x]._get_diff_changelog()
-        log_print( sp[x].name  + ": " + sp[x].changelogpath)
-        log_print( sp[x].changelogdiff)
+
+        rrjson.append({'name': x, 'deblist': sp[x].debs, 'version': sp[
+                      x].version, 'oldversion': sp[x].oldversion, 'changelog': sp[x].changelogdiff})
+
+        print(sp[x].name + " " + sp[x].oldversion)
+
+    with open('data.json', 'w') as f:
+        json.dump(rrjson, f)
