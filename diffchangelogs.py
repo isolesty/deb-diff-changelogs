@@ -28,6 +28,21 @@ def log_print(output):
         pprint(output)
 
 
+def find_file(start, name):
+    """find all file in start
+    start: a location, str
+    name: str
+    """
+    deblist = []
+    for relpath, dirs, files in os.walk(start):
+        for file in files:
+            if file.endswith(name):
+                filepath = os.path.join(start, relpath, file)
+                deblist.append(os.path.normpath(os.path.abspath(filepath)))
+
+    return deblist
+
+
 def gen_string(length):
     """Create a random string
     length: int
@@ -37,7 +52,7 @@ def gen_string(length):
     return ''.join([random.choice(randomstring) for i in range(length)])
 
 
-def searchdeb(searchbase, searchkey):
+def search_deb(searchbase, searchkey):
     """Search a dict
     searchbase: dict
     searchkey: str
@@ -262,7 +277,8 @@ class Source(object):
 
 
 if __name__ == '__main__':
-    deblist = [name for name in os.listdir('./') if fnmatch(name, '*.deb')]
+    deblist = find_file('./', 'deb')
+
     sp = gen_deb(deblist)
 
     if len(sys.argv) > 1:
@@ -275,10 +291,8 @@ if __name__ == '__main__':
         jsondetails = data['details']
 
         for debfile in jsondetails:
-            # find debs which has a old version
-            # oldversion in json file is a str
             if debfile['oldversion'] != '0':
-                oldsp = searchdeb(sp, debfile['name'])
+                oldsp = search_deb(sp, debfile['name'])
                 oldsp.oldversion = debfile['oldversion']
 
     for x in sp.keys():
