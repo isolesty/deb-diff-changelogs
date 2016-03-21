@@ -277,7 +277,7 @@ class Source(object):
 
 
 if __name__ == '__main__':
-    deblist = find_file('./', 'deb')
+    deblist = find_file('./', '.deb')
 
     sp = gen_deb(deblist)
 
@@ -295,7 +295,14 @@ if __name__ == '__main__':
                 oldsp = search_deb(sp, debfile['name'])
                 oldsp.oldversion = debfile['oldversion']
 
+    rrjson = []
     for x in sp.keys():
         sp[x]._get_diff_changelog()
-        print(sp[x].name + " " + sp[x].changelogdiff,
-              sep=' ', end='\n', file=sys.stdout, flush=False)
+
+        rrjson.append({'name': x, 'deblist': sp[x].debs, 'version': sp[
+                      x].version, 'oldversion': sp[x].oldversion, 'changelog': sp[x].changelogdiff})
+
+        print(sp[x].name + " " + sp[x].oldversion)
+
+    with open('data.json', 'w') as f:
+        json.dump(rrjson, f)

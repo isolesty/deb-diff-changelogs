@@ -65,4 +65,4 @@ target/
 # local
 *.deb
 test/
-result.json
+*.json
