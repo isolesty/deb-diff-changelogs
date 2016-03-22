@@ -1,0 +1,44 @@
+html{
+    margin: 10px 10px ;
+}
+
+.search-status{
+    font-weight: bold;
+}
+
+.input-width{
+	width: 605px;
+}
+
+.check-td{
+	width: 20px;
+	display: block;
+}
+
+.details-td{
+	width: 980px;
+}
+
+
+.changelog-td{
+	width: 390px;
+	margin-right: 10px;
+}
+
+.bugzilla-td{
+	width: 190px;
+	margin-right: 10px;
+}
+
+.git-td{
+	width: 190px;
+	margin-right: 10px;
+}
+
+.name-div{
+	width: 300px;
+}
+
+.version-div{
+	width: 300px;
+}
