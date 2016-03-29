@@ -12,15 +12,12 @@ import sys
 import json
 from pprint import pprint
 
-# list all debs
-from fnmatch import fnmatch
-
 # random tmp dir
 import random
 import string
 
 # debug switch
-DEBUG = 1
+DEBUG = 0
 
 
 def log_print(output):
@@ -213,7 +210,10 @@ def gen_deb(deblist):
         else:
             # add a new source
             newsource = Source(
-                checkdeb.source, checkdeb.name, checkdeb.arch, checkdeb.version, )
+                checkdeb.source,
+                checkdeb.name,
+                checkdeb.arch,
+                checkdeb.version, )
             newsource._update_details(checkdeb)
 
             sourcelist[newsource.name] = newsource
@@ -270,7 +270,8 @@ class Source(object):
     def _get_diff_changelog(self):
         if self.changelogpath != '':
             logdiff = diff_changelog(
-                self.debpath, self.changelogpath, self.oldversion, self.version)
+                self.debpath, self.changelogpath,
+                self.oldversion, self.version)
             # diff_changelog failed?
             if logdiff != 8 and logdiff != 9:
                 self.changelogdiff = logdiff
@@ -309,14 +310,17 @@ if __name__ == '__main__':
                 oldsp = search_deb(sp, debfile['name'])
                 oldsp.oldversion = debfile['oldversion']
 
-    rrjson = []
-    for x in sp.keys():
-        sp[x]._get_diff_changelog()
+        rrjson = []
+        for x in sp.keys():
+            sp[x]._get_diff_changelog()
 
-        rrjson.append({'name': x, 'deblist': sp[x].debs, 'version': sp[
-                      x].version, 'oldversion': sp[x].oldversion, 'changelog': sp[x].changelogdiff})
+            rrjson.append({'name': x,
+                           'deblist': sp[x].debs,
+                           'version': sp[x].version,
+                           'oldversion': sp[x].oldversion,
+                           'changelog': sp[x].changelogdiff})
 
-        print(sp[x].name + " " + sp[x].oldversion)
+            log_print(sp[x].name + " " + sp[x].oldversion)
 
-    with open('data.json', 'w') as f:
-        json.dump(rrjson, f)
+        with open('data.json', 'w') as f:
+            json.dump(rrjson, f)
