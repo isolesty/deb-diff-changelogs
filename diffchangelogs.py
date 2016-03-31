@@ -307,8 +307,12 @@ if __name__ == '__main__':
 
         for debfile in jsondetails:
             if debfile['oldversion'] != '0':
-                oldsp = search_deb(sp, debfile['name'])
-                oldsp.oldversion = debfile['oldversion']
+                # source file not generated above
+                if debfile['arch'] == 'source':
+                    pass
+                else:
+                    oldsp = search_deb(sp, debfile['name'])
+                    oldsp.oldversion = debfile['oldversion']
 
         rrjson = []
         for x in sp.keys():

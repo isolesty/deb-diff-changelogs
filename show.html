@@ -39,7 +39,7 @@
                 add_table = add_table + '<td class="details-td"><div class="panel panel-default" style="background-color: #faebd7;"><div class="panel-heading" role="tab" id="heading' + i + '"><h4 class="panel-title"><div role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse' + i + '" aria-expanded="true" aria-controls="collapse' + i + '" style="color: #0066bb">';
                 add_table = add_table + '<div class="name-div">' + data_item.name + '</div><div class="version-div">Version: ' + data_item.version + '</div></div></h4></div>';
                 add_table = add_table + '<div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div class="panel-body" id="result' + i + '">';
-                add_table = add_table + '<table><tr><td class="changelog-td"><b>changelog</b></td><td class="bugzilla-td"><b>bugzilla</b></td><td class="git-td"><b>git</b></td></tr><tr>';
+                add_table = add_table + '<table><tr><td class="changelog-td"><b>changelog</b></td><td class="git-td"><b>git</b></td></tr><tr>';
                 add_table = add_table + '<td class="changelog-td">' + data_item.changelog.split("\n").join("<br />") + '</td>';
                 add_table = add_table + '<td class="bugzilla-td"></td>';
                 add_table = add_table + '<td class="git-td"></td>';
@@ -50,7 +50,7 @@
                 update_table = update_table + '<td class="details-td"><div class="panel panel-default" style="background-color: #faebd7;"><div class="panel-heading" role="tab" id="heading' + i + '"><h4 class="panel-title"><div role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse' + i + '" aria-expanded="true" aria-controls="collapse' + i + '" style="color: #0066bb">';
                 update_table = update_table + '<div class="name-div">' + data_item.name + '</div><div class="version-div">Version: ' + data_item.oldversion + ' -> ' + data_item.version + '</div></h4></div>';
                 update_table = update_table + '<div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div class="panel-body" id="result' + i + '">';
-                update_table = update_table + '<table><tr><td class="changelog-td"><b>changelog</b></td><td class="bugzilla-td"><b>bugzilla</b></td><td class="git-td"><b>git</b></td></tr><tr>';
+                update_table = update_table + '<table><tr><td class="changelog-td"><b>changelog</b></td><td class="git-td"><b>git</b></td></tr><tr>';
                 update_table = update_table + '<td class="changelog-td">' + data_item.changelog.split("\n").join("<br />") + '</td>';
                 update_table = update_table + '<td class="bugzilla-td"></td>';
                 update_table = update_table + '<td class="git-td"></td>';

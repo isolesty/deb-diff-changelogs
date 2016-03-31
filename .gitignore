@@ -66,3 +66,4 @@ target/
 *.deb
 test/
 *.json
+*.changelog
