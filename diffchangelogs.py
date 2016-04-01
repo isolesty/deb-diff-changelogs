@@ -297,6 +297,7 @@ if __name__ == '__main__':
     sp = gen_deb(deblist)
 
     if len(sys.argv) > 1:
+        versionset = 0
         resultjson = sys.argv[1]
 
         with open(resultjson, 'r') as f:
@@ -307,12 +308,14 @@ if __name__ == '__main__':
 
         for debfile in jsondetails:
             if debfile['oldversion'] != '0':
-                # source file not generated above
+                # source file's old version is right
                 if debfile['arch'] == 'source':
-                    pass
+                    sp[debfile['name']].oldversion = debfile['oldversion']
                 else:
                     oldsp = search_deb(sp, debfile['name'])
-                    oldsp.oldversion = debfile['oldversion']
+                    # no source file found, use deb's oldversion
+                    if oldsp.oldversion == '0':
+                        oldsp.oldversion = debfile['oldversion']
 
         rrjson = []
         for x in sp.keys():
