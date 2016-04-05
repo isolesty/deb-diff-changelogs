@@ -49,7 +49,7 @@
                 add_table = add_table + '<div class="name-div" style="display: inline-block;">' + data_item.name + '</div><div class="version-div" style="display: inline;">Version: ' + data_item.version + '</div></div></h4></div>';
                 add_table = add_table + '<div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div class="panel-body" id="result' + i + '">';
                 add_table = add_table + '<table><tr><td class="deb-td"><b>debs</b></td><td class="changelog-td"><b>changelog</b></td><td class="git-td"><b>git</b></td></tr><tr>';
-                add_table = add_table + '<td class="deb-td">' + listall(data_item.deblist) + '</td>';
+                add_table = add_table + '<td class="deb-td" style="display: block;">' + listall(data_item.deblist) + '</td>';
                 add_table = add_table + '<td class="changelog-td">' + data_item.changelog.split("\n").join("<br />") + '</td>';
                 add_table = add_table + '<td class="git-td"></td>';
                 add_table = add_table + '</tr></table></div></div></div></td>';
@@ -60,7 +60,7 @@
                 update_table = update_table + '<div class="name-div" style="display: inline-block;">' + data_item.name + '</div><div class="version-div" style="display: inline;">Version: ' + data_item.oldversion + ' -> ' + data_item.version + '</div></h4></div>';
                 update_table = update_table + '<div id="collapse' + i + '" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading' + i + '"><div class="panel-body" id="result' + i + '">';
                 update_table = update_table + '<table><tr><td class="deb-td"><b>debs</b></td><td class="changelog-td"><b>changelog</b></td><td class="git-td"><b>git</b></td></tr><tr>';
-                update_table = update_table + '<td class="deb-td">' + listall(data_item.deblist) + '</td>';
+                update_table = update_table + '<td class="deb-td" style="display: block;">' + listall(data_item.deblist) + '</td>';
                 update_table = update_table + '<td class="changelog-td">' + data_item.changelog.split("\n").join("<br />") + '</td>';
                 update_table = update_table + '<td class="git-td"></td>';
                 update_table = update_table + '</tr></table></div></div></div></td>';
