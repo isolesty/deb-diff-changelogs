@@ -143,7 +143,7 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
         return 8
 
     if baseversion == '0':
-        # a new source, no baseversion, show all changlogs
+        # a new source, no baseversion, show all changelogs
         diffcmd = "cd " + TMPDIR + " && zcat " + changelogpath
     else:
         # diff the changelog after baseversion
@@ -158,10 +158,38 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
     os.system(cleancmd)
 
     if logdiff:
-        return logdiff
+        return gen_bugzilla_url(logdiff)
     else:
         # changelog diff failed
         return 9
+
+
+def gen_bugzilla_url(changelogs):
+    # deepin bugzilla
+    # Resolves: https://bugzilla.deepin.io/show_bug.cgi?id=882
+    deepinre = re.compile('Resolves: (.*)')
+    deepinbugs = re.findall(deepinre, changelogs)
+    if deepinbugs:
+        for url in deepinbugs:
+            changelogs = changelogs.replace(
+                url, "<a href=%s>%s</a>" % (url, url))
+
+    # debian bugzilla
+    debianre = re.compile('Closes: (.*)', flags=re.IGNORECASE)
+    debianbugs = re.findall(debianre, changelogs)
+
+    if debianbugs:
+        numre = re.compile('(\d+)')
+        for bugs in debianbugs:
+            nums = re.findall(numre, bugs)
+            # sometimes same bugs in one line.
+            # closes: #434558, #434560, #434577, #434560.
+            nums = set(nums)
+            for num in nums:
+                changelogs = changelogs.replace(
+                    num, "<a href=http://bugs.debian.org/%s>%s</a>" % (num, num))
+
+    return changelogs
 
 
 def gen_deb(deblist):
