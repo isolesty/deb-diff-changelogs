@@ -16,22 +16,21 @@ html{
 }
 
 .details-td{
-	width: 980px;
+	width: 1080px;
 }
 
 
 .changelog-td{
-	width: 390px;
+	width: 490px;
 	margin-right: 10px;
 }
 
-.bugzilla-td{
-	width: 190px;
-	margin-right: 10px;
+.deb-td{
+	width: 290px;
 }
 
 .git-td{
-	width: 190px;
+	width: 290px;
 	margin-right: 10px;
 }
 
