@@ -137,7 +137,7 @@ def get_changelog(debpath, changelogpath, baseversion, updateversion):
     extractcmd = "dpkg-deb -x " + debpath + " " + TMPDIR
 
     extractdeb = os.system(extractcmd)
-    # extrace deb failed?
+    # extract deb failed?
     if extractdeb != 0:
         log_print("extract deb file failed.")
         return 9
@@ -180,7 +180,7 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
     logdiff = ''
     # if not found baseversion, most 10 version of changelogs
     changeloglen = 10
-    # get the
+    # get the length
     if len(headers) < changeloglen:
         changeloglen = len(headers)
     for x in range(0, changeloglen):
