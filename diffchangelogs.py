@@ -180,7 +180,7 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
     logdiff = ''
     # if not found baseversion, most 10 version of changelogs
     changeloglen = 10
-    # get the len
+    # get the
     if len(headers) < changeloglen:
         changeloglen = len(headers)
     for x in range(0, changeloglen):
