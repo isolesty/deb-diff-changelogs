@@ -121,14 +121,14 @@ def get_changelog_file(debpath):
         return ''
 
 
-def diff_changelog(debpath, changelogpath, baseversion, updateversion):
-    """Show the changelogs of package.
+def get_changelog(debpath, changelogpath, baseversion, updateversion):
+    """Get changelogs of package.
     depends on dpkg-deb, zcat, sed.
     debpath: str
     changelogpath: str
     baseversion: str
     updateversion: str
-    return diff log: str
+    return changelogs: str
     """
     # create tmp dir
     randomstring = gen_string(10)
@@ -140,22 +140,55 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
     # extrace deb failed?
     if extractdeb != 0:
         log_print("extract deb file failed.")
-        return 8
+        return 9
 
-    if baseversion == '0':
-        # a new source, no baseversion, show all changelogs
-        diffcmd = "cd " + TMPDIR + " && zcat " + changelogpath
-    else:
-        # diff the changelog after baseversion
-        diffcmd = "cd " + TMPDIR + " && zcat " + changelogpath + " | sed -n '/" + \
-            updateversion + "/,/" + baseversion + \
-            "/p' | grep -v " + baseversion
+    zcatcmd = "cd " + TMPDIR + " && zcat " + changelogpath
 
-    logdiff = os.popen(diffcmd).read()
+    changelogs = os.popen(zcatcmd).read()
 
     # clean TMPDIR
     cleancmd = "rm -rf " + TMPDIR
     os.system(cleancmd)
+
+    return changelogs
+
+
+def diff_changelog(debpath, changelogpath, baseversion, updateversion):
+    """Show the diff changelogs of package.
+    debpath: str
+    changelogpath: str
+    baseversion: str
+    updateversion: str
+    return logdiff: str
+    """
+    changelogs = get_changelog(
+        debpath, changelogpath, baseversion, updateversion)
+
+    # extract deb file failed
+    if changelogs == 8:
+        return 8
+    # changelogs is Null
+    elif changelogs == '':
+        return 9
+
+    header_re = re.compile(r'.*;.*urgency=.*\n+')
+
+    # changelog[0] is ''
+    changelog = header_re.split(changelogs)
+    headers = header_re.findall(changelogs)
+
+    logdiff = ''
+    # TODO: Use dpkg to compare the versions
+    # if not found baseversion, show 10
+    for x in range(0, 10):
+        # version start
+        if updateversion in headers[x]:
+            logdiff += headers[x] + changelog[x + 1]
+        # version end, diff changelog stop
+        elif baseversion in headers[x]:
+            break
+        else:
+            logdiff += headers[x] + changelog[x + 1]
 
     if logdiff:
         return gen_bugzilla_url(logdiff)
@@ -252,7 +285,7 @@ def gen_deb(deblist):
 class Package(object):
 
     """The base package class
-    TODO: a more useful way to get the deb informaiton
+    TODO: a more useful way to get the deb information
     """
 
     def __init__(self, path):
@@ -277,7 +310,7 @@ class Package(object):
 
 class Source(object):
 
-    """Pacakges' Source,
+    """Packages' Source,
     changelog diff depend on this"""
 
     def __init__(self, name, debname, debarch, version):
