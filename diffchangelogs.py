@@ -178,14 +178,14 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
     headers = header_re.findall(changelogs)
 
     logdiff = ''
-    # TODO: Use dpkg to compare the versions
-    # if not found baseversion, show 10
-    for x in range(0, 10):
-        # version start
-        if updateversion in headers[x]:
-            logdiff += headers[x] + changelog[x + 1]
+    # if not found baseversion, most 10 version of changelogs
+    changeloglen = 10
+    # get the len
+    if len(headers) < changeloglen:
+        changeloglen = len(headers)
+    for x in range(0, changeloglen):
         # version end, diff changelog stop
-        elif baseversion in headers[x]:
+        if baseversion in headers[x]:
             break
         else:
             logdiff += headers[x] + changelog[x + 1]
