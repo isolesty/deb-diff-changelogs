@@ -198,6 +198,11 @@ def diff_changelog(debpath, changelogpath, baseversion, updateversion):
 
 
 def gen_bugzilla_url(changelogs):
+    """Parse the urls to links
+    changelogs: str
+    return changelogs: str
+    TODO: CVE, GNOME, LP
+    """
     # deepin bugzilla
     # Resolves: https://bugzilla.deepin.io/show_bug.cgi?id=882
     deepinre = re.compile('Resolves: (.*)')
@@ -299,9 +304,16 @@ class Package(object):
             'Version:.*', self.controlfile).group().replace('Version: ', '')
         self.arch = re.search(
             'Architecture:.*', self.controlfile).group().replace('Architecture: ', '')
-        self.installsize = re.search(
-            'Installed-Size:.*', self.controlfile).group().replace('Installed-Size: ', '')
-        source = re.search('Source:.*', self.controlfile)
+        try:
+            self.installsize = re.search(
+                'Installed-Size:.*', self.controlfile).group().replace('Installed-Size: ', '')
+        except:
+            self.installsize = '0'
+
+        try:
+            source = re.search('Source:.*', self.controlfile)
+        except:
+            pass
         if source:
             self.source = source.group().replace('Source: ', '')
         else:
