@@ -230,6 +230,42 @@ def gen_bugzilla_url(changelogs):
     return changelogs
 
 
+def get_commitlog(name, oldversion, newversion):
+    """Generate commits between old version and newversion
+    name: str
+    oldversion: str
+    newversion: str
+    return commitlog: str
+    """
+    REPODIR = "/home/leaeasy/git-repo/"
+    # get all deepin repos
+    allrepos = [f for f in os.listdir(
+        REPODIR) if not os.path.isfile(os.path.join(REPODIR, f))]
+
+    # not deepin packages
+    if name not in allrepos:
+        return 9
+
+    # version example:
+    # 3.0.1-1
+    # 2:1.18.1-1
+    # 10.1.0.5503~a20p2
+    versionre = re.compile("(\d:)?([\d.]+).*")
+    oldtag = re.findall(versionre, oldversion)[0][1]
+    newtag = re.findall(versionre, newversion)[0][1]
+
+    commitcmd = "git log --pretty=oneline --abbrev-commit " + \
+        oldtag + ".." + newtag
+
+    os.chdir(REPODIR + name)
+    commitlog = os.popen(commitcmd).read()
+
+    if commitlog:
+        return commitlog
+    else:
+        return 9
+
+
 def gen_deb(deblist):
     """Generate all deb files to source,
     deblist: list
@@ -334,6 +370,7 @@ class Source(object):
         self.debpath = ''
         self.size = ''
         self.changelogpath = ''
+        self.commitlog = ''
 
     def _set_details(self, debpath, size, changelogpath):
         self.debpath = debpath
@@ -363,6 +400,13 @@ class Source(object):
             self._set_details(
                 checkdeb.path, checkdeb.installsize, changelogpath)
 
+    def _set_commit_log(self):
+        commitlog = get_commitlog(self.name, self.oldversion, self.version)
+        if commitlog == 9:
+            # no commit logs in repo dir
+            self.commitlog = 'No commit logs found'
+        else:
+            self.commitlog = commitlog
 
 if __name__ == '__main__':
     deblist = find_file('./', '.deb')
