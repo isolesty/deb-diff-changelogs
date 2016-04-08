@@ -254,10 +254,9 @@ def get_commitlog(name, oldversion, newversion):
     oldtag = re.findall(versionre, oldversion)[0][1]
     newtag = re.findall(versionre, newversion)[0][1]
 
-    commitcmd = "git log --pretty=oneline --abbrev-commit " + \
-        oldtag + ".." + newtag
+    commitcmd = "cd " + REPODIR + name + " && git log --pretty=oneline --abbrev-commit " + \
+        oldtag + ".." + newtag + " && cd - >/dev/null"
 
-    os.chdir(REPODIR + name)
     commitlog = os.popen(commitcmd).read()
 
     if commitlog:
@@ -437,12 +436,14 @@ if __name__ == '__main__':
         rrjson = []
         for x in sp.keys():
             sp[x]._get_diff_changelog()
+            sp[x]._set_commit_log()
 
             rrjson.append({'name': x,
                            'deblist': sp[x].debs,
                            'version': sp[x].version,
                            'oldversion': sp[x].oldversion,
-                           'changelog': sp[x].changelogdiff})
+                           'changelog': sp[x].changelogdiff,
+                           'commitlog': sp[x].commitlog})
 
             log_print(sp[x].name + " " + sp[x].oldversion)
 
