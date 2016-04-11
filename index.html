@@ -23,6 +23,7 @@
     <script type="text/javascript" src="js/bootstrap.min.js">
     </script>
     <script type="text/javascript">
+      var rpasize = 0;
       listall = function(debs) {
         var deblist = '';
         console.log(debs);
@@ -31,6 +32,17 @@
         });
         return deblist
       }
+
+      $(document).ready(function() {
+        $.ajax({
+          url: "result.json",
+          dataType: "json",
+          success: function(data) {
+            rpasize = data.size;
+          }
+        });
+      });
+
 
       $(document).ready(function() {
         $.ajax({
@@ -74,7 +86,7 @@
             });
             add_table = add_table + '</table>';
             update_table = update_table + '</table>';
-            total = "<h3>The rpa has " + add_num  + " package(s) added and " + update_num + " package(s) updated.</h3>"
+            total = "<h3>The rpa has " + add_num  + " package(s) added and " + update_num + " package(s) updated. Total size is " + rpasize + "</h3>";
             col_table = total;
             if (add_num != 0) {
               col_table = col_table + add_table;
