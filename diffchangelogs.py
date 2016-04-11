@@ -269,8 +269,9 @@ def gen_commit_url(data, name):
     urlbase = "https://github.com/linuxdeepin/" + name + "/commit/"
     for x in data.split('\n'):
         commitid = x.split(" ")[0]
-        data = data.replace(
-            commitid, "<a href='%s%s'>%s</a>" % (urlbase, commitid, commitid))
+        if commitid:
+            data = data.replace(
+                commitid, "<a href='%s%s'>%s</a>" % (urlbase, commitid, commitid))
 
     return data
 
