@@ -260,9 +260,19 @@ def get_commitlog(name, oldversion, newversion):
     commitlog = os.popen(commitcmd).read()
 
     if commitlog:
-        return commitlog
+        return gen_commit_url(commitlog, name)
     else:
         return 9
+
+
+def gen_commit_url(data, name):
+    urlbase = "https://github.com/linuxdeepin/" + name + "/commit/"
+    for x in data.split('\n'):
+        commitid = x.split(" ")[0]
+        data = data.replace(
+            commitid, "<a href=%s%s>%s</a>" % (urlbase, commitid, commitid))
+
+    return data
 
 
 def gen_deb(deblist):
