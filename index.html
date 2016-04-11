@@ -38,6 +38,8 @@
           dataType: "json",
           success: function(data) {
             var col_table = '';
+            var add_num = 0;
+            var update_num = 0;
             var add_table = '<h4>Packages Add:</h4><table>';
             var update_table = '<h4>Packages Update:</h4><table>';
             $.each(data,
@@ -51,9 +53,10 @@
                 add_table = add_table + '<table><tr><td class="deb-td"><b>debs</b></td><td class="changelog-td"><b>changelog</b></td><td class="git-td"><b>git</b></td></tr><tr>';
                 add_table = add_table + '<td class="deb-td" style="display: block;">' + listall(data_item.deblist) + '</td>';
                 add_table = add_table + '<td class="changelog-td">' + data_item.changelog.split("\n").join("<br />") + '</td>';
-                add_table = add_table + '<td class="git-td"></td>';
+                add_table = add_table + '<td class="git-td" style="display: block;">' + data_item.commitlog.split("\n").join("<br />") + '</td>';
                 add_table = add_table + '</tr></table></div></div></div></td>';
                 add_table = add_table + '</tr>';
+                add_num = add_num + 1
               } else {
                 update_table = update_table + '<tr><td class="check-td"><label><input type="checkbox" value="index' + data_item.name + '"></label></td>';
                 update_table = update_table + '<td class="details-td"><div class="panel panel-default" style="background-color: #faebd7;"><div class="panel-heading" role="tab" id="heading' + i + '"><h4 class="panel-title"><div role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse' + i + '" aria-expanded="true" aria-controls="collapse' + i + '" style="color: #0066bb">';
@@ -62,15 +65,23 @@
                 update_table = update_table + '<table><tr><td class="deb-td"><b>debs</b></td><td class="changelog-td"><b>changelog</b></td><td class="git-td"><b>git</b></td></tr><tr>';
                 update_table = update_table + '<td class="deb-td" style="display: block;">' + listall(data_item.deblist) + '</td>';
                 update_table = update_table + '<td class="changelog-td">' + data_item.changelog.split("\n").join("<br />") + '</td>';
-                update_table = update_table + '<td class="git-td"></td>';
+                update_table = update_table + '<td class="git-td" style="display: block;">' + data_item.commitlog.split("\n").join("<br />") + '</td>';
                 update_table = update_table + '</tr></table></div></div></div></td>';
                 update_table = update_table + '</tr>';
+                update_num = update_num + 1
               };
 
             });
             add_table = add_table + '</table>';
             update_table = update_table + '</table>';
-            col_table = add_table + update_table;
+            total = "<h3>The rpa has " + add_num  + " package(s) added and " + update_num + " package(s) updated.</h3>"
+            col_table = total;
+            if (add_num != 0) {
+              col_table = col_table + add_table;
+            };
+            if (update_num != 0) {
+              col_table = col_table + update_table
+            };
             document.getElementById("source-accordion").innerHTML = col_table;
           }
         });
