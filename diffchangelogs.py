@@ -227,6 +227,15 @@ def gen_bugzilla_url(changelogs):
                 changelogs = changelogs.replace(
                     num, "<a href=http://bugs.debian.org/%s>%s</a>" % (num, num))
 
+    # cve bugs
+    cvere = re.compile('(CVE-\d+-\d+)')
+    cvebugs = re.findall(cvere, changelogs)
+
+    if cvebugs:
+        for bug in cvebugs:
+            changelogs = changelogs.replace(
+                bug, "<a href='https://cve.mitre.org/cgi-bin/cvename.cgi?name=%s'>%s</a>" % (bug, bug))
+
     return changelogs
 
 
