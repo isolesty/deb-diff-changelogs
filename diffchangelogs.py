@@ -360,17 +360,23 @@ class Package(object):
         self.arch = re.search(
             'Architecture:.*', self.controlfile).group().replace('Architecture: ', '')
         try:
-            self.installsize = re.search(
+            installsize = re.search(
                 'Installed-Size:.*', self.controlfile).group().replace('Installed-Size: ', '')
+            if installsize:
+                self.installsize = installsize
+            else:
+                self.installsize = '0'
         except:
             self.installsize = '0'
 
+        # a failed example:
+        # Source: vice (2.4.dfsg+2.4.26-1)
         try:
             source = re.search('Source:.*', self.controlfile)
         except:
             pass
         if source:
-            self.source = source.group().replace('Source: ', '')
+            self.source = source.group().split(' ')[1]
         else:
             self.source = self.name
 
@@ -387,7 +393,7 @@ class Source(object):
         self.oldversion = '0'
         self.changelogdiff = ''
         self.debpath = ''
-        self.size = ''
+        self.size = '0'
         self.changelogpath = ''
         self.commitlog = ''
 
