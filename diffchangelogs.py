@@ -449,15 +449,16 @@ if __name__ == '__main__':
         jsondetails = data['details']
 
         for debfile in jsondetails:
-            if debfile['oldversion'] != '0':
-                # source file's old version is right
-                if debfile['arch'] == 'source':
-                    sp[debfile['name']].oldversion = debfile['oldversion']
-                else:
-                    oldsp = search_deb(sp, debfile['name'])
-                    # no source file found, use deb's oldversion
-                    if oldsp.oldversion == '0':
-                        oldsp.oldversion = debfile['oldversion']
+            oldsp = search_deb(sp, debfile['name'])
+            if oldsp != 0:
+                if debfile['oldversion'] != '0':
+                    # source file's old version is right
+                    if debfile['arch'] == 'source':
+                        sp[debfile['name']].oldversion = debfile['oldversion']
+                    else:
+                        # no source file found, use deb's oldversion
+                        if oldsp.oldversion == '0':
+                            oldsp.oldversion = debfile['oldversion']
 
         rrjson = []
         for x in sp.keys():
