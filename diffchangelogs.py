@@ -100,22 +100,32 @@ def get_changelog_file(debpath):
     # -rw-r--r-- root/root     23459 2015-12-10 12:32 ./usr/share/doc/vim-common/changelog.gz
     # -rw-r--r-- root/root     84110 2016-01-25 10:25 ./usr/share/doc/vim-common/changelog.Debian.gz
     # filepath="./usr/share/doc/vim-common/changelog.gz\n./usr/share/doc/vim-common/changelog.Debian.gz"
+
+    # gzip: ./usr/share/doc/lbreakout2/changelog.Debian.amd64.gz: No such file or directory
+    # gzip: ./usr/share/doc/gmsh/changelog.Debian.amd64.gz: No such file or
+    # directory
     cmd = "dpkg-deb -c " + debpath + \
         " | grep changelog  | awk '$3!=0{print $6;}'"
     # strip the \n in filepath
     filepath = os.popen(cmd).read().strip().split('\n')
+    changelogpath = ''
 
     if filepath:
         # multi changelog files in filepath
         if len(filepath) > 1:
             for x in filepath:
-                # a file has changelog and Debian may be the right one?
-                if x.find('Debian') != -1:
-                    filepath = x
+                if 'changelog.Debian.gz' in x:
+                    changelogpath = x
                     break
+            # changelog.Debian.gz is not in deb file list
+            if not changelogpath:
+                for x in filepath:
+                    # a file has changelog and Debian may be the right one?
+                    if x.find('Debian') != -1:
+                        filepath = x
         else:
-            filepath = filepath[0]
-        return filepath
+            changelogpath = filepath[0]
+        return changelogpath
     else:
         # deb file doesn't contain a changelog,
         return ''
