@@ -101,9 +101,6 @@ def get_changelog_file(debpath):
     # -rw-r--r-- root/root     84110 2016-01-25 10:25 ./usr/share/doc/vim-common/changelog.Debian.gz
     # filepath="./usr/share/doc/vim-common/changelog.gz\n./usr/share/doc/vim-common/changelog.Debian.gz"
 
-    # gzip: ./usr/share/doc/lbreakout2/changelog.Debian.amd64.gz: No such file or directory
-    # gzip: ./usr/share/doc/gmsh/changelog.Debian.amd64.gz: No such file or
-    # directory
     cmd = "dpkg-deb -c " + debpath + \
         " | grep changelog  | awk '$3!=0{print $6;}'"
     # strip the \n in filepath
@@ -114,7 +111,7 @@ def get_changelog_file(debpath):
         # multi changelog files in filepath
         if len(filepath) > 1:
             for x in filepath:
-                if 'changelog.Debian.gz' in x:
+                if os.path.split(x)[1] == 'changelog.Debian.gz':
                     changelogpath = x
                     break
             # changelog.Debian.gz is not in deb file list
@@ -211,7 +208,7 @@ def gen_bugzilla_url(changelogs):
     """Parse the urls to links
     changelogs: str
     return changelogs: str
-    TODO: CVE, GNOME, LP
+    TODO: GNOME, LP
     """
     # deepin bugzilla
     # Resolves: https://bugzilla.deepin.io/show_bug.cgi?id=882
@@ -223,19 +220,23 @@ def gen_bugzilla_url(changelogs):
                 url, "<a href=%s>%s</a>" % (url, url))
 
     # debian bugzilla
-    debianre = re.compile('Closes: (.*)', flags=re.IGNORECASE)
+    debianre = re.compile('Closes: #(.*)', flags=re.IGNORECASE)
     debianbugs = re.findall(debianre, changelogs)
-
     if debianbugs:
         numre = re.compile('(\d+)')
+        nums = []
         for bugs in debianbugs:
-            nums = re.findall(numre, bugs)
-            # sometimes same bugs in one line.
-            # closes: #434558, #434560, #434577, #434560.
-            nums = set(nums)
-            for num in nums:
-                changelogs = changelogs.replace(
-                    num, "<a href=http://bugs.debian.org/%s>%s</a>" % (num, num))
+            bugnums = re.findall(numre, bugs)
+            for x in bugnums:
+                nums.append(x)
+
+        # sometimes same bugs in multi lines:
+        # closes: #434558, #434560, #434577, #434560.
+        # CLoses: #434577
+        nums = set(nums)
+        for num in nums:
+            changelogs = changelogs.replace(
+                num, "<a href=http://bugs.debian.org/%s>%s</a>" % (num, num))
 
     # cve bugs
     cvere = re.compile('(CVE-\d+-\d+)')
@@ -258,8 +259,12 @@ def get_commitlog(name, oldversion, newversion):
     """
     REPODIR = "/home/leaeasy/git-repo/"
     # get all deepin repos
-    allrepos = [f for f in os.listdir(
-        REPODIR) if not os.path.isfile(os.path.join(REPODIR, f))]
+    try:
+        allrepos = [f for f in os.listdir(
+            REPODIR) if os.path.isdir(os.path.join(REPODIR, f))]
+    except:
+        # REPODIR not found
+        return 9
 
     # not deepin packages
     if name not in allrepos:
