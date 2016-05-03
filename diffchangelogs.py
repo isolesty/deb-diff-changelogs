@@ -450,13 +450,18 @@ class Source(object):
             self.commitlog = commitlog
 
 if __name__ == '__main__':
-    deblist = find_file('./', '.deb')
-
-    sp = gen_deb(deblist)
 
     if len(sys.argv) > 1:
         versionset = 0
         resultjson = sys.argv[1]
+
+        if len(sys.argv) > 2:
+            debpath = sys.argv[2]
+        else:
+            debpath = "./"
+
+        deblist = find_file(debpath, '.deb')
+        sp = gen_deb(deblist)
 
         with open(resultjson, 'r') as f:
             data = json.load(f)
