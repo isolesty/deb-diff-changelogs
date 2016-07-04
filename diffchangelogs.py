@@ -15,9 +15,12 @@ from pprint import pprint
 # random tmp dir
 import random
 import string
+import suprocess
 
 # debug switch
 DEBUG = 0
+
+from multiprocessing import Pool, Manager
 
 
 def log_print(output):
@@ -69,7 +72,7 @@ def get_deb_details(debpath):
     return: str
     TODO: read one deb file only once
     """
-    return os.popen('dpkg-deb -f %s' % debpath).read()
+    return os.popen('dpkg-deb -f %s' % debpath).readlines()
 
 
 def compare_version(newversion, oldversion):
@@ -148,13 +151,12 @@ def get_changelog(debpath, changelogpath, baseversion, updateversion):
     # extract deb failed?
     if extractdeb != 0:
         log_print("extract deb file failed.")
-        return 9
+        changelogs = 9
+    else:
+        zcatcmd = "cd " + TMPDIR + " && zcat " + changelogpath
+        changelogs = os.popen(zcatcmd).read()
 
-    zcatcmd = "cd " + TMPDIR + " && zcat " + changelogpath
-
-    changelogs = os.popen(zcatcmd).read()
-
-    # clean TMPDIR
+    # clean tempdir
     cleancmd = "rm -rf " + TMPDIR
     os.system(cleancmd)
 
@@ -301,60 +303,64 @@ def gen_commit_url(data, name):
     return data
 
 
+def _gen_deb(debfile):
+    # print("   gen_deb: %s" % debfile)
+    checkdeb = Package(debfile)
+    if checkdeb.source in sourcelist.keys():
+        # if the source changelogpath is not set and this deb has a
+        # changelog, try to set it
+        if sourcelist[checkdeb.source].changelogpath == '':
+            sourcelist[checkdeb.source]._update_details(checkdeb)
+
+        if checkdeb.name in sourcelist[checkdeb.source].debs.keys():
+            # this is an update version of source
+            if compare_version(checkdeb.version, sourcelist[checkdeb.source].version):
+                sourcelist[checkdeb.source].oldversion = sourcelist[
+                    checkdeb.source].version
+                sourcelist[checkdeb.source].version = checkdeb.version
+
+                sourcelist[checkdeb.source].debpath = checkdeb.path
+            else:
+                # the same deb name of different arch(such as amd64 and
+                # i386)
+                if (checkdeb.version == sourcelist[checkdeb.source].version) and (sourcelist[checkdeb.source].debs[checkdeb.name].find(checkdeb.arch) == -1):
+                    sourcelist[checkdeb.source].debs[
+                        checkdeb.name] += " " + checkdeb.arch
+                # this is an old version of this source
+                else:
+                    sourcelist[
+                        checkdeb.source].oldversion = checkdeb.version
+
+        else:
+            # this is a new deb of this source ,add it to deb list
+            sourcelist[checkdeb.source].debs[checkdeb.name] = checkdeb.arch
+
+            # try to extract the smallest deb of every source
+            # package.installsize and source.size are string, not number
+            if (int(checkdeb.installsize) < int(sourcelist[checkdeb.source].size)):
+                sourcelist[checkdeb.source]._update_details(checkdeb)
+
+    else:
+        # add a new source
+        newsource = Source(
+            checkdeb.source,
+            checkdeb.name,
+            checkdeb.arch,
+            checkdeb.version, )
+        newsource._update_details(checkdeb)
+
+        sourcelist[newsource.name] = newsource
+
+
 def gen_deb(deblist):
     """Generate all deb files to source,
     deblist: list
     return source: dict
     """
-    sourcelist = {}
-
-    for i in deblist:
-        checkdeb = Package(i)
-        if checkdeb.source in sourcelist.keys():
-            # if the source changelogpath is not set and this deb has a
-            # changelog, try to set it
-            if sourcelist[checkdeb.source].changelogpath == '':
-                sourcelist[checkdeb.source]._update_details(checkdeb)
-
-            if checkdeb.name in sourcelist[checkdeb.source].debs.keys():
-                # this is an update version of source
-                if compare_version(checkdeb.version, sourcelist[checkdeb.source].version):
-                    sourcelist[checkdeb.source].oldversion = sourcelist[
-                        checkdeb.source].version
-                    sourcelist[checkdeb.source].version = checkdeb.version
-
-                    sourcelist[checkdeb.source].debpath = checkdeb.path
-                else:
-                    # the same deb name of different arch(such as amd64 and
-                    # i386)
-                    if (checkdeb.version == sourcelist[checkdeb.source].version) and (sourcelist[checkdeb.source].debs[checkdeb.name].find(checkdeb.arch) == -1):
-                        sourcelist[checkdeb.source].debs[
-                            checkdeb.name] += " " + checkdeb.arch
-                    # this is an old version of this source
-                    else:
-                        sourcelist[
-                            checkdeb.source].oldversion = checkdeb.version
-
-            else:
-                # this is a new deb of this source ,add it to deb list
-                sourcelist[checkdeb.source].debs[checkdeb.name] = checkdeb.arch
-
-                # try to extract the smallest deb of every source
-                # package.installsize and source.size are string, not number
-                if (int(checkdeb.installsize) < int(sourcelist[checkdeb.source].size)):
-                    sourcelist[checkdeb.source]._update_details(checkdeb)
-
-        else:
-            # add a new source
-            newsource = Source(
-                checkdeb.source,
-                checkdeb.name,
-                checkdeb.arch,
-                checkdeb.version, )
-            newsource._update_details(checkdeb)
-
-            sourcelist[newsource.name] = newsource
-
+    pool = Pool()
+    pool.map(_gen_deb, deblist)
+    pool.close()
+    pool.join()
     return sourcelist
 
 
@@ -366,34 +372,25 @@ class Package(object):
 
     def __init__(self, path):
         self.path = path
-        # path=/tmp/ws/1.txt base=/tmp/ws filename=1.txt
         self.base, self.filename = os.path.split(path)
         self.controlfile = get_deb_details(self.path)
-        self.name = re.search(
-            'Package:.*', self.controlfile).group().replace('Package: ', '')
-        self.version = re.search(
-            'Version:.*', self.controlfile).group().replace('Version: ', '')
-        self.arch = re.search(
-            'Architecture:.*', self.controlfile).group().replace('Architecture: ', '')
-        try:
-            installsize = re.search(
-                'Installed-Size:.*', self.controlfile).group().replace('Installed-Size: ', '')
-            if installsize:
-                self.installsize = installsize
-            else:
-                self.installsize = '0'
-        except:
-            self.installsize = '0'
+        self.installsize = '0'
+        self.source = None
 
-        # a failed example:
-        # Source: vice (2.4.dfsg+2.4.26-1)
-        try:
-            source = re.search('Source:.*', self.controlfile)
-        except:
-            pass
-        if source:
-            self.source = source.group().split(' ')[1]
-        else:
+        for line in self.controlfile:
+            line = line.strip()
+            if line.startswith("Package: "):
+                self.name = line[9:]
+            if line.startswith("Version: "):
+                self.version = line[9:]
+            if line.startswith("Architecture: "):
+                self.arch = line[14:]
+            if line.startswith("Installed-Size: "):
+                self.installsize = line[16:]
+            if line.startswith("Source: "):
+                self.source = line[8:]
+
+        if self.source is None:
             self.source = self.name
 
 
@@ -434,6 +431,8 @@ class Source(object):
         else:
             self.changelogdiff = ''
 
+        return self.changelogdiff
+
     def _update_details(self, checkdeb):
         changelogpath = get_changelog_file(checkdeb.path)
         if changelogpath != '':
@@ -449,19 +448,27 @@ class Source(object):
         else:
             self.commitlog = commitlog
 
+        return self.commitlog
+
 if __name__ == '__main__':
-
     if len(sys.argv) > 1:
-        versionset = 0
-        resultjson = sys.argv[1]
-
+        # get all deb(s) list
         if len(sys.argv) > 2:
             debpath = sys.argv[2]
         else:
             debpath = "./"
-
+        # print("generate deblist...")
         deblist = find_file(debpath, '.deb')
+
+        m = Manager()
+        sourcelist = m.dict()
+
+        # print("generate sp list...")
         sp = gen_deb(deblist)
+
+        # read result.json
+        versionset = 0
+        resultjson = sys.argv[1]
 
         with open(resultjson, 'r') as f:
             data = json.load(f)
@@ -482,19 +489,25 @@ if __name__ == '__main__':
                         if oldsp.oldversion == '0':
                             oldsp.oldversion = debfile['oldversion']
 
-        rrjson = []
-        for x in sp.keys():
-            sp[x]._get_diff_changelog()
-            sp[x]._set_commit_log()
+        rrjson = m.list()
+
+        def _append(x):
+            changelogdiff = sp[x]._get_diff_changelog()
+            commitlog = sp[x]._set_commit_log()
 
             rrjson.append({'name': x,
                            'deblist': sp[x].debs,
                            'version': sp[x].version,
                            'oldversion': sp[x].oldversion,
-                           'changelog': sp[x].changelogdiff,
-                           'commitlog': sp[x].commitlog})
+                           'changelog': changelogdiff,
+                           'commitlog': commitlog})
 
             log_print(sp[x].name + " " + sp[x].oldversion)
 
+        pool = Pool()
+        pool.map(_append, sp.keys())
+        pool.close()
+        pool.join()
+
         with open('data.json', 'w') as f:
-            json.dump(rrjson, f)
+            json.dump(list(rrjson), f)
