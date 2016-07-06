@@ -65,6 +65,20 @@ def search_deb(searchbase, searchkey):
     return 0
 
 
+def search_cacheddata(data, name, version):
+    """Search the data.json
+    searchbase: list
+    searchkey: str, str
+    return 0 if not found, else 1.
+    """
+    for x in data:
+        # already existed in cached data.json
+        if name == data[x].name and version == data[x].version:
+            return 1
+
+    return 0
+
+
 def get_deb_details(debpath):
     """Show the control details of deb file.
     depends on dpkg-deb
@@ -451,6 +465,12 @@ class Source(object):
         return self.commitlog
 
 if __name__ == '__main__':
+
+    """sys.argv[1]: result,json,
+        sys.argv[2]: deb search path,
+        sys.argv[3]: old data.json, cached file
+    """
+
     if len(sys.argv) > 1:
         # get all deb(s) list
         if len(sys.argv) > 2:
@@ -459,6 +479,11 @@ if __name__ == '__main__':
             debpath = "./"
         # print("generate deblist...")
         deblist = find_file(debpath, '.deb')
+
+        # cached data.json
+        if len(sys.argv) > 3:
+            with open(sys.argv[3], 'r') as f:
+                cacheddata = json.load(f)
 
         m = Manager()
         sourcelist = m.dict()
@@ -477,6 +502,11 @@ if __name__ == '__main__':
         jsondetails = data['details']
 
         for debfile in jsondetails:
+            # cached data.json, skip this source
+            if len(sys.argv) > 3:
+                if search_cacheddata(cacheddata, debfile['name'], debfile['newversion']):
+                    continue
+
             # search the Source object
             oldsp = search_deb(sp, debfile['name'])
             if oldsp != 0:
