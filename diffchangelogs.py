@@ -69,12 +69,12 @@ def search_cacheddata(data, name, version):
     """Search the data.json
     searchbase: list
     searchkey: str, str
-    return 0 if not found, else 1.
+    return 0 if not found, else the dict.
     """
     for x in data:
         # already existed in cached data.json
         if name == data[x].name and version == data[x].version:
-            return 1
+            return data[x]
 
     return 0
 
@@ -500,11 +500,19 @@ if __name__ == '__main__':
 
         modifytime = data['time']
         jsondetails = data['details']
+        rrjson = m.list()
+        cachedSourcelist = []
 
         for debfile in jsondetails:
-            # cached data.json, skip this source
+            # if old data.json has this source, skip it
             if len(sys.argv) > 3:
-                if search_cacheddata(cacheddata, debfile['name'], debfile['newversion']):
+                cachedSource = search_cacheddata(cacheddata, debfile['name'], debfile['newversion'])
+                if cachedSource:
+                    # ignore the same source in result.json,  only once
+                    if debfile['name'] not in cachedSourcelist:
+                        rrjson.append(cachedSource)
+                        cachedSourcelist.append(debfile['name'])
+
                     continue
 
             # search the Source object
@@ -519,7 +527,6 @@ if __name__ == '__main__':
                         if oldsp.oldversion == '0':
                             oldsp.oldversion = debfile['oldversion']
 
-        rrjson = m.list()
 
         def _append(x):
             changelogdiff = sp[x]._get_diff_changelog()
