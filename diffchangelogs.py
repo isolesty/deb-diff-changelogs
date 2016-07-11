@@ -15,7 +15,7 @@ from pprint import pprint
 # random tmp dir
 import random
 import string
-import suprocess
+import subprocess
 
 # debug switch
 DEBUG = 0
