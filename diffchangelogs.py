@@ -70,9 +70,8 @@ def search_cacheddata(data, name, version):
     """
     for x in data:
         # already existed in cached data.json
-        if name == data[x].name and version == data[x].version:
-            return data[x]
-
+        if name == x['name'] and version == x['version']:
+            return x
     return 0
 
 
